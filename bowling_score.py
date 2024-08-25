@@ -8,8 +8,11 @@ scope = [
     "https://www.googleapis.com/auth/spreadsheets",
     "https://www.googleapis.com/auth/drive",
 ]
-creds = ServiceAccountCredentials.from_json_keyfile_name(
-    r"C:\Users\mnish\Downloads\bowling202409-07ee09797e39.json", scope
+# creds = ServiceAccountCredentials.from_json_keyfile_name(
+#     r"C:\Users\mnish\Downloads\bowling202409-07ee09797e39.json", scope
+# )
+creds = ServiceAccountCredentials.from_json_keyfile_dict(
+    st.secrets["gcp_service_account"], scope
 )
 client = gspread.authorize(creds)
 
@@ -34,15 +37,11 @@ def read_updated_score():
 
 
 # 初期化時にセッションステートを設定
-# st.session_state.update_button_clicked = False
-
-# df, sheet = read_origin_score()
 df = read_origin_score()
 # データを表示
 st.title("順位表")
 
 if st.button("順位更新"):
-    # st.session_state.update_button_clicked = True
     # 再読み込み
     read_origin_score.clear()
     df = read_origin_score()
