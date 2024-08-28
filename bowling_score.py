@@ -1,12 +1,10 @@
 import gspread
-import matplotlib.pyplot as plt
 import pandas as pd
+import plotly.graph_objects as go
 import streamlit as st
 from oauth2client.service_account import ServiceAccountCredentials
 
 from utils import calc_bowling_score
-
-plt.rcParams["font.family"] = "Meiryo"
 
 # Google Sheets APIの認証情報を設定
 scope = [
@@ -40,6 +38,12 @@ def read_origin_score():
     sheet = client.open("スコア表").worksheet("1ゲーム目")
     data = sheet.get_all_records()
     df = pd.DataFrame(data)
+
+    for col in df.columns[:2:-1]:
+        if df[col].sum() > 0:
+            break
+    current_frame = int(col.split("_")[0])
+
     df[[str(i) for i in range(1, 11)]] = df[df.columns[3:]].apply(
         calc_bowling_score, result_type="expand", axis=1
     )
@@ -65,7 +69,7 @@ def read_origin_score():
     df_team = make_rank(df_team)
     df = make_rank(df)
 
-    return df, df_team
+    return df, df_team, current_frame
 
 
 def read_updated_score():
@@ -76,16 +80,42 @@ def read_updated_score():
     return df
 
 
-df, df_team = read_origin_score()
+df, df_team, current_frame = read_origin_score()
 
-area = "全拠点"
-st.sidebar.title("拠点選択")
-labels = ["全拠点"] + list(df_team["拠点"].unique())
-area = st.sidebar.selectbox("拠点を選択してください", labels)
 
-if area != "全拠点":
-    df = df[df["拠点"] == area]
-    df_team = df_team[df_team["拠点"] == area]
+def sidebar_select(df, df_team, colname, multi):
+    selected_elements = "ALL"
+    st.sidebar.title(f"{colname}選択")
+    if colname != "名前":
+        labels = ["ALL"] + sorted(df_team[colname].unique())
+    else:
+        labels = ["ALL"] + sorted(df[colname].unique())
+
+    if not multi:
+        selected_elements = set()
+        selected_elements.add(
+            st.sidebar.selectbox(f"{colname}を選択してください", labels)
+        )
+    else:
+        selected_elements = set(
+            st.sidebar.multiselect(f"{colname}を選択してください", labels, labels[0])
+        )
+
+    if "ALL" not in selected_elements:
+        df = df[df[colname].isin(selected_elements)]
+        if colname != "名前":
+            df_team = df_team[df_team[colname].isin(selected_elements)]
+    return df, df_team, selected_elements
+
+
+df, df_team, _ = sidebar_select(df, df_team, "拠点", False)
+df, df_team, _ = sidebar_select(df, df_team, "チーム", True)
+df, df_team, selected_elements = sidebar_select(df, df_team, "名前", True)
+
+current_frame = st.sidebar.slider(
+    label="フレームを選択してください", min_value=1, max_value=10, value=current_frame
+)
+
 
 # データを表示
 st.title("個人順位表")
@@ -96,43 +126,76 @@ if st.button("順位更新"):
     df, df_team = read_origin_score()
 
 st.dataframe(
-    df[["順位", "10", "名前", "拠点", "チーム"]].rename(columns={"10": "得点"})
+    df[["順位", str(current_frame), "名前", "拠点", "チーム"]].rename(
+        columns={str(current_frame): "得点"}
+    ),
+    hide_index=True,
 )
 
-plt.figure(figsize=(10, 10))
+
+fig = go.Figure()
 
 for index, row in df.iterrows():
-    # 24-34はフレーム
-    plt.plot(range(1, 11), row[24:34], marker="o", label=row["名前"])
+    fig.add_trace(
+        go.Scatter(
+            x=list(range(1, current_frame + 1)),
+            y=row[24 : 24 + current_frame],
+            mode="lines+markers",
+            name=row["名前"],
+        )
+    )
 
-plt.xlabel("フレーム")
-plt.ylabel("スコア")
-plt.title("個人順位表")
-plt.legend(title="名前", bbox_to_anchor=(1.05, 1), loc="upper left")
-plt.grid(True)
-plt.tight_layout()
+fig.update_layout(
+    title="個人順位表",
+    xaxis_title="フレーム",
+    yaxis_title="スコア",
+    legend_title="名前",
+    xaxis=dict(tickmode="linear"),
+    yaxis=dict(rangemode="tozero"),
+    hovermode="x unified",
+)
 
-st.pyplot(plt)
+st.plotly_chart(fig)
 
 
-st.title("チーム順位表")
+st.dataframe(
+    df[["順位", "名前"] + [str(i + 1) for i in range(current_frame)]], hide_index=True
+)
 
-st.dataframe(df_team[["順位", "10", "メンバー", "拠点"]].rename(columns={"10": "得点"}))
+if "ALL" in selected_elements:
+    st.title("チーム順位表")
 
-plt.figure(figsize=(10, 10))
+    st.dataframe(
+        df_team[["順位", "10", "メンバー", "拠点"]].rename(columns={"10": "得点"}),
+        hide_index=True,
+    )
 
-for index, row in df_team.iterrows():
-    # 3-13はフレーム
-    plt.plot(range(1, 11), row[3:13], marker="o", label=row["メンバー"])
+    fig_team = go.Figure()
 
-plt.xlabel("フレーム")
-plt.ylabel("スコア")
-plt.title("チーム順位表")
-plt.legend(title="メンバー", bbox_to_anchor=(1.05, 1), loc="upper left")
-plt.grid(True)
-plt.tight_layout()
+    for index, row in df_team.iterrows():
+        fig_team.add_trace(
+            go.Scatter(
+                x=list(range(1, current_frame + 1)),
+                y=row[3 : 3 + current_frame],
+                mode="lines+markers",
+                name=row["メンバー"],
+            )
+        )
 
-st.pyplot(plt)
+    fig_team.update_layout(
+        title="チーム順位表",
+        xaxis_title="フレーム",
+        yaxis_title="スコア",
+        legend_title="メンバー",
+        xaxis=dict(tickmode="linear"),
+        yaxis=dict(rangemode="tozero"),
+        hovermode="x unified",
+    )
+
+    st.plotly_chart(fig_team)
+
+else:
+    st.write("個人が選択されているため、チーム順位表は表示していません")
 
 st.subheader("データ更新用")
 edited_df = st.data_editor(df[df.columns[:-11]], num_rows="dynamic")
