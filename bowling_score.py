@@ -124,7 +124,7 @@ st.title("個人順位表")
 if st.button("順位更新"):
     # 再読み込み
     read_origin_score.clear()
-    df, df_team = read_origin_score()
+    df, df_team, current_frame = read_origin_score()
 
 st.dataframe(
     df[["順位", str(current_frame), "名前", "拠点", "チーム"]].rename(
