@@ -2,6 +2,7 @@ import pytesseract
 import streamlit as st
 from PIL import Image
 
+pytesseract.pytesseract.tesseract_cmd = "/usr/bin/tesseract"
 st.title("画像認識のテスト")
 
 # 画像アップロード
