@@ -2,3 +2,5 @@ gspread
 oauth2client
 pandas
 plotly
+pytesseract
+Pillow
