@@ -1,9 +1,17 @@
+import shutil
+
 import pytesseract
 import streamlit as st
 from PIL import Image
 
-pytesseract.pytesseract.tesseract_cmd = "/usr/bin/tesseract"
-st.title("画像認識のテスト")
+
+@st.cache_data(show_spinner=False)
+def find_tesseract_binary():
+    return shutil.which("tesseract")
+
+
+tesseract_path = find_tesseract_binary()
+pytesseract.pytesseract.tesseract_cmd = tesseract_path
 
 # 画像アップロード
 uploaded_file = st.file_uploader(
