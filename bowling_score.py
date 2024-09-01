@@ -5,83 +5,9 @@ import plotly.graph_objects as go
 import streamlit as st
 from oauth2client.service_account import ServiceAccountCredentials
 
-from utils import calc_bowling_score
+import utils
 
-# Google Sheets APIの認証情報を設定
-scope = [
-    "https://www.googleapis.com/auth/spreadsheets",
-    "https://www.googleapis.com/auth/drive",
-]
-
-creds = ServiceAccountCredentials.from_json_keyfile_dict(
-    st.secrets["gcp_service_account"], scope
-)
-client = gspread.authorize(creds)
-
-
-def keisha(row, max_):
-    rate = max_ / row["人数"]
-    for i in range(1, 11):
-        row[str(i)] *= rate
-    return row[3:-1]
-
-
-def make_rank(df):
-    df = df.sort_values("10", ascending=False)
-    df["順位"] = [i + 1 for i in range(df.shape[0])]
-    return df
-
-
-# スプレッドシートのデータを読み込み
-@st.cache_data
-def read_origin_score():
-    # スプレッドシートを開く
-    sheet = client.open("スコア表").worksheet("1ゲーム目")
-    data = sheet.get_all_records()
-    df = pd.DataFrame(data)
-
-    for col in df.columns[:2:-1]:
-        if df[col].sum() > 0:
-            break
-    current_frame = int(col.split("_")[0])
-
-    df[[str(i) for i in range(1, 11)]] = df[df.columns[3:]].apply(
-        calc_bowling_score, result_type="expand", axis=1
-    )
-
-    df_team = df[list(df.columns[:3]) + list(df.columns[-10:])].copy()
-    df_team = df_team.groupby("チーム", as_index=False).agg(
-        {
-            "名前": lambda x: "  ".join(x),
-            "拠点": "first",
-            **{
-                col: "sum"
-                for col in df_team.columns
-                if col not in ["チーム", "名前", "拠点"]
-            },
-        }
-    )
-    df_team["人数"] = list(df.groupby("チーム")["名前"].count())
-    df_team = df_team.rename(columns={"名前": "メンバー"})
-    max_ = df_team["人数"].max()
-    df_team[[str(i) for i in range(1, 11)]] = df_team.apply(
-        keisha, result_type="expand", axis=1, max_=max_
-    )
-    df_team = make_rank(df_team)
-    df = make_rank(df)
-
-    return df, df_team, current_frame
-
-
-def read_updated_score():
-    # スプレッドシートを開く
-    sheet = client.open("スコア表").worksheet("1ゲーム目")
-    data = sheet.get_all_records()
-    df = pd.DataFrame(data)
-    return df
-
-
-df, df_team, current_frame = read_origin_score()
+df, df_team, current_frame, df_conf = utils.read_origin_score()
 
 
 def sidebar_select(df, df_team, colname, multi):
@@ -123,8 +49,8 @@ st.title("個人順位表")
 
 if st.button("順位更新"):
     # 再読み込み
-    read_origin_score.clear()
-    df, df_team, current_frame = read_origin_score()
+    utils.read_origin_score.clear()
+    df, df_team, current_frame = utils.read_origin_score()
 
 st.dataframe(
     df[["順位", str(current_frame), "名前", "拠点", "チーム"]].rename(
@@ -146,7 +72,7 @@ for index, row in df.iterrows():
     fig.add_trace(
         go.Scatter(
             x=list(range(1, current_frame + 1)),
-            y=row[24 : 24 + current_frame],
+            y=row[45 : 45 + current_frame],
             mode="lines+markers",
             name=row["名前"],
             marker=dict(color=colors[color_index]),
@@ -180,7 +106,9 @@ if "ALL" in selected_elements:
     st.title("チーム順位表")
 
     st.dataframe(
-        df_team[["順位", "10", "メンバー", "拠点"]].rename(columns={"10": "得点"}),
+        df_team[["順位", str(current_frame), "メンバー", "拠点"]].rename(
+            columns={str(current_frame): "得点"}
+        ),
         hide_index=True,
     )
     st.write("※人数の少ないチームの得点は、多いチームと合うように補正しています。")
