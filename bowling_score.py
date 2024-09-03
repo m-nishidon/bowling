@@ -4,11 +4,25 @@ import streamlit as st
 
 import utils
 
-if "is_mobile" not in st.session_state:
-    st.session_state["is_mobile"] = utils.check_is_mobile()
-width = 350 if st.session_state["is_mobile"] else 700
+# カラースケールを拡張
+colors = (
+    px.colors.qualitative.Light24
+    + px.colors.qualitative.Alphabet
+    + px.colors.qualitative.Dark24
+)
 
 df, df_team, current_frame, df_conf = utils.read_origin_score()
+
+# if "width_tmp" in st.session_state and st.sidebar.button(
+#     "保存(フィルター等の設定を保存)"
+# ):
+#     st.session_state["width"] = st.session_state["width_tmp"]
+
+
+# if "width" in st.session_state and st.sidebar.button("読込(フィルター等の設定を読込)"):
+#     width = st.session_state["width"]
+# else:
+#     width = 600
 
 
 def sidebar_select(df, df_team, colname, multi):
@@ -41,68 +55,17 @@ df, df_team, _ = sidebar_select(df, df_team, "チーム", True)
 df, df_team, selected_elements = sidebar_select(df, df_team, "名前", True)
 
 current_frame = st.sidebar.slider(
-    label="フレームを選択してください", min_value=1, max_value=10, value=current_frame
+    label="フレームを選択してください", min_value=1, max_value=20, value=current_frame
 )
+
+# width = st.sidebar.slider("グラフの幅を選択", 300, 700, step=100, value=width)
 
 
 # データを表示
-st.title("個人順位表")
-
 if st.button("順位更新"):
     # 再読み込み
     utils.read_origin_score.clear()
     df, df_team, current_frame, df_conf = utils.read_origin_score()
-
-st.dataframe(
-    df[["順位", str(current_frame), "名前", "拠点", "チーム"]].rename(
-        columns={str(current_frame): "得点"}
-    ),
-    hide_index=True,
-)
-
-# カラースケールを拡張
-colors = (
-    px.colors.qualitative.Light24
-    + px.colors.qualitative.Alphabet
-    + px.colors.qualitative.Dark24
-)
-fig = go.Figure()
-
-for index, row in df.iterrows():
-    color_index = index % len(colors)
-    fig.add_trace(
-        go.Scatter(
-            x=list(range(1, current_frame + 1)),
-            y=row[45 : 45 + current_frame],
-            mode="lines+markers",
-            name=row["名前"],
-            marker=dict(color=colors[color_index]),
-        )
-    )
-
-fig.update_layout(
-    xaxis_title="フレーム",
-    yaxis_title="スコア",
-    legend_title="名前",
-    xaxis=dict(tickmode="linear"),
-    yaxis=dict(rangemode="tozero"),
-    hovermode="x unified",
-    legend=dict(
-        orientation="h",
-        x=0.5,
-        y=1,
-        xanchor="center",
-        yanchor="bottom",
-    ),
-    dragmode="pan",
-    width=width,
-)
-
-st.plotly_chart(fig)
-
-st.dataframe(
-    df[["順位", "名前"] + [str(i + 1) for i in range(current_frame)]], hide_index=True
-)
 
 if "ALL" in selected_elements:
     st.title("チーム順位表")
@@ -114,6 +77,9 @@ if "ALL" in selected_elements:
         hide_index=True,
     )
     st.write("※人数の少ないチームの得点は、多いチームと合うように補正しています。")
+
+    if "width_team" not in st.session_state:
+        st.session_state["width_team"] = 700
     fig_team = go.Figure()
 
     for index, row in df_team.iterrows():
@@ -143,13 +109,61 @@ if "ALL" in selected_elements:
             yanchor="bottom",
         ),
         dragmode="pan",
-        width=width,
+        # width=width,
     )
 
     st.plotly_chart(fig_team)
 
+
 else:
     st.write("個人が選択されているため、チーム順位表は表示していません")
 
+st.title("個人順位表")
+
+st.dataframe(
+    df[["順位", str(current_frame), "名前", "拠点", "チーム"]].rename(
+        columns={str(current_frame): "得点"}
+    ),
+    hide_index=True,
+)
+
+fig = go.Figure()
+
+for index, row in df.iterrows():
+    color_index = index % len(colors)
+    fig.add_trace(
+        go.Scatter(
+            x=list(range(1, current_frame + 1)),
+            y=row[45 : 45 + current_frame],
+            mode="lines+markers",
+            name=row["名前"],
+            marker=dict(color=colors[color_index]),
+        )
+    )
+
+fig.update_layout(
+    xaxis_title="フレーム",
+    yaxis_title="スコア",
+    legend_title="名前",
+    xaxis=dict(tickmode="linear"),
+    yaxis=dict(rangemode="tozero"),
+    hovermode="x unified",
+    legend=dict(
+        orientation="h",
+        x=0.5,
+        y=1,
+        xanchor="center",
+        yanchor="bottom",
+    ),
+    dragmode="pan",
+    # width=width,
+)
+
+st.plotly_chart(fig)
+
+
 st.subheader("データ更新用")
 edited_df = st.data_editor(df[df.columns[:-21]], num_rows="dynamic")
+
+
+# st.session_state["width_tmp"] = width

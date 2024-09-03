@@ -168,13 +168,6 @@ def check_is_mobile():
     document.body.innerHTML = `<p>${isMobile ? 'mobile' : 'desktop'}</p>`;
     </script>
     """
-    # HTMLコードを埋め込み、結果を取得
-    result = components.html(html_code, height=50)
 
-    # 取得した結果に基づいてデバイスを判別
-    if result == "mobile":
-        st.write("【確認】スマートフォン")
-        return True
-    else:
-        st.write("【確認】パソコン")
-        return False
+    # HTMLをページに埋め込む
+    components.html(html_code, height=50)
