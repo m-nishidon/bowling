@@ -93,6 +93,7 @@ fig.update_layout(
         xanchor="center",
         yanchor="bottom",
     ),
+    dragmode="pan",
 )
 
 st.plotly_chart(fig)
@@ -140,6 +141,7 @@ if "ALL" in selected_elements:
             xanchor="center",
             yanchor="bottom",
         ),
+        dragmode="pan",
     )
 
     st.plotly_chart(fig_team)
