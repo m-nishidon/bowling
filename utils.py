@@ -68,7 +68,12 @@ def get_one_game_info(pins):
 def read_origin_score():
     client = connect_spread_sheet()
     # スプレッドシートを開く
-    spreadsheet = client.open("スコア表").worksheet("data")
+    try:
+        spreadsheet = client.open("スコア表").worksheet("data")
+    except AttributeError:
+        connect_spread_sheet.clear()
+        client = connect_spread_sheet()
+        spreadsheet = client.open("スコア表").worksheet("data")
 
     sheet_data = spreadsheet.get_all_records()
 
