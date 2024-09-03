@@ -4,6 +4,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import requests
 import streamlit as st
+import streamlit.components.v1 as components
 from oauth2client.service_account import ServiceAccountCredentials
 
 
@@ -158,3 +159,22 @@ def send_message(message, token):
     }
 
     requests.post("https://notify-api.line.me/api/notify", headers=headers, files=files)
+
+
+def check_is_mobile():
+    html_code = """
+    <script>
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    document.body.innerHTML = `<p>${isMobile ? 'mobile' : 'desktop'}</p>`;
+    </script>
+    """
+    # HTMLコードを埋め込み、結果を取得
+    result = components.html(html_code, height=50)
+
+    # 取得した結果に基づいてデバイスを判別
+    if result == "mobile":
+        st.write("【確認】スマートフォン")
+        return True
+    else:
+        st.write("【確認】パソコン")
+        return False

@@ -1,11 +1,12 @@
-import gspread
-import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
-from oauth2client.service_account import ServiceAccountCredentials
 
 import utils
+
+if "is_mobile" not in st.session_state:
+    st.session_state["is_mobile"] = utils.check_is_mobile()
+width = 350 if st.session_state["is_mobile"] else 700
 
 df, df_team, current_frame, df_conf = utils.read_origin_score()
 
@@ -94,10 +95,10 @@ fig.update_layout(
         yanchor="bottom",
     ),
     dragmode="pan",
+    width=width,
 )
 
 st.plotly_chart(fig)
-
 
 st.dataframe(
     df[["順位", "名前"] + [str(i + 1) for i in range(current_frame)]], hide_index=True
@@ -142,6 +143,7 @@ if "ALL" in selected_elements:
             yanchor="bottom",
         ),
         dragmode="pan",
+        width=width,
     )
 
     st.plotly_chart(fig_team)
@@ -150,4 +152,4 @@ else:
     st.write("個人が選択されているため、チーム順位表は表示していません")
 
 st.subheader("データ更新用")
-edited_df = st.data_editor(df[df.columns[:-11]], num_rows="dynamic")
+edited_df = st.data_editor(df[df.columns[:-21]], num_rows="dynamic")
