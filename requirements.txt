@@ -5,3 +5,4 @@ plotly
 pytesseract
 Pillow
 requests
+streamlit==1.32.0
