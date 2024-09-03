@@ -162,8 +162,4 @@ fig.update_layout(
 st.plotly_chart(fig)
 
 
-st.subheader("データ更新用")
-edited_df = st.data_editor(df[df.columns[:-21]], num_rows="dynamic")
-
-
 # st.session_state["width_tmp"] = width

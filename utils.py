@@ -159,15 +159,3 @@ def send_message(message, token):
     }
 
     requests.post("https://notify-api.line.me/api/notify", headers=headers, files=files)
-
-
-def check_is_mobile():
-    html_code = """
-    <script>
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    document.body.innerHTML = `<p>${isMobile ? 'mobile' : 'desktop'}</p>`;
-    </script>
-    """
-
-    # HTMLをページに埋め込む
-    components.html(html_code, height=50)
