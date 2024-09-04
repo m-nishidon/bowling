@@ -1,5 +1,3 @@
-from datetime import datetime
-
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
@@ -120,7 +118,7 @@ width = st.sidebar.slider(
 
 # データを表示
 if st.button("順位更新"):
-    if (datetime.now() - now).seconds <= 30:
+    if (utils.get_now() - now).seconds <= 30:
         st.warning("時間を空けて再度順位更新ボタンを押してください")
     else:
         # 再読み込み

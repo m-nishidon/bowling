@@ -1,4 +1,4 @@
-from datetime import datetime
+import datetime
 
 import gspread
 import pandas as pd
@@ -66,10 +66,16 @@ def get_one_game_info(pins):
     return types, cnts
 
 
+def get_now():
+    # strealitにデプロイするとJSTではなくUTCとなる
+    DIFF = 9
+    return datetime.datetime.now(datetime.UTC) + datetime.timedelta(hours=DIFF)
+
+
 # スプレッドシートのデータを読み込み
 @st.cache_data
 def read_origin_score():
-    now = datetime.now()
+    now = get_now()
     client = connect_spread_sheet()
     # スプレッドシートを開く
     try:
