@@ -5,51 +5,85 @@ import utils
 st.title("スコア更新用")
 
 
-df, df_team, current_frame, df_conf = utils.read_origin_score()
+df, df_team, current_frame, df_conf, now = utils.read_origin_score()
 
 df = df[df.columns[:-21]]
 
 
-def select(df, colname, multi, selected_past):
-    if not selected_past:
-        selected_elements = "ALL"
+# 拠点に関するフィルター
+# session_stateの問題で拠点、チーム、名前は関数化せずそれぞれ処理
+def update_area():
+    st.session_state["area"] = st.session_state["new_area"]
 
-    st.subheader(f"{colname}選択")
-    labels = ["ALL"] + sorted(df[colname].unique())
 
-    if not multi:
-        if selected_past:
-            selected_item = selected_past.pop()
-            idx = labels.index(selected_item)
+st.subheader("拠点選択")
+labels = ["ALL"] + sorted(df["拠点"].unique())
+idx = labels.index(st.session_state["area"]) if "area" in st.session_state else 0
+selected_area = st.selectbox(
+    "拠点を選択してください",
+    labels,
+    idx,
+    key="new_area",
+    on_change=update_area,
+)
+if selected_area != "ALL":
+    df = df[df["拠点"] == selected_area]
+
+
+# チームに関するフィルター
+def update_team():
+    selected_team = st.session_state["new_team"]
+    if "ALL" in selected_team and len(selected_team) >= 2:
+        if selected_team[-1] == "ALL":
+            selected_team = set({"ALL"})
         else:
-            idx = 0
-        selected_elements = set()
-        selected_elements.add(st.selectbox(f"{colname}を選択してください", labels, idx))
-    else:
-        selected_elements = set(
-            st.multiselect(
-                f"{colname}を選択してください",
-                labels,
-                selected_past if selected_past else labels[0],
-            )
-        )
-
-    if "ALL" not in selected_elements:
-        df = df[df[colname].isin(selected_elements)]
-    return df, selected_elements
+            selected_team = set(selected_team)
+            selected_team.discard("ALL")
+    st.session_state["team"] = selected_team
 
 
-selected_items = []
-for key in ["area", "team", "name"]:
-    if key in st.session_state:
-        selected_items.append(st.session_state[key])
-    else:
-        selected_items.append(None)
-selected_area, selected_team, selected_name = selected_items
+st.subheader("チーム選択")
+labels = ["ALL"] + sorted(df["チーム"].unique())
+selected_team = set(
+    st.multiselect(
+        "チームを選択してください",
+        labels,
+        st.session_state["team"] if "team" in st.session_state else labels[0],
+        key="new_team",
+        on_change=update_team,
+    )
+)
+if selected_team != {"ALL"}:
+    df = df[df["チーム"].isin(selected_team)]
 
-df, st.session_state["area"] = select(df, "拠点", False, selected_area)
-df, st.session_state["team"] = select(df, "チーム", True, selected_team)
-df, st.session_state["name"] = select(df, "名前", True, selected_name)
+
+# 名前に関するフィルター
+def update_name():
+    selected_name = st.session_state["new_name"]
+    if "ALL" in selected_name and len(selected_name) >= 2:
+        if selected_name[-1] == "ALL":
+            selected_name = set({"ALL"})
+        else:
+            selected_name = set(selected_name)
+            selected_name.discard("ALL")
+    st.session_state["name"] = selected_name
+
+
+st.subheader("名前選択")
+labels = ["ALL"] + sorted(df["名前"].unique())
+selected_name = set(
+    st.multiselect(
+        "名前を選択してください",
+        labels,
+        st.session_state["name"] if "name" in st.session_state else labels[0],
+        key="new_name",
+        on_change=update_name,
+    )
+)
+if selected_name != {"ALL"}:
+    df = df[df["名前"].isin(selected_name)]
+
+# 1ゲーム目2ゲーム目の選択
 st.subheader("ゲーム選択")
 idx = st.session_state["game"] if "game" in st.session_state else 0
 selected_game = st.selectbox("何ゲーム目かを選択してください", (1, 2), idx)
@@ -58,8 +92,20 @@ if selected_game == 1:
     df = df[df.columns[:-21]]
 else:
     df = df[list(df.columns[:3]) + list(df.columns[24:])]
+
+
+# フレームの選択
+def update_frame():
+    st.session_state["frame"] = st.session_state["new_frame"]
+
+
 start, end = st.slider(
-    "何フレーム目を更新するか選んでください", min_value=1, max_value=10, value=(1, 10)
+    "何フレーム目を更新するか選んでください",
+    min_value=1,
+    max_value=10,
+    key="new_frame",
+    value=st.session_state["frame"] if "frame" in st.session_state else (1, 10),
+    on_change=update_frame,
 )
 if end == 10:
     df = df[list(df.columns[:3]) + list(df.columns[3 + (start - 1) * 2 :])]
@@ -68,9 +114,9 @@ else:
         list(df.columns[:3])
         + list(df.columns[3 + (start - 1) * 2 : -(3 + (9 - end) * 2)])
     ]
-edited_df = st.data_editor(df)
 
-
-st.write(
-    "前回のフィルター条件の保存(バグってます…)、変な数字の確認、2ゲーム目しない場合"
-)
+# インデックスを名前列にする
+# 元のインデックスも保存しておく
+df["index"] = df.index
+df = df.set_index("名前")
+edited_df = st.data_editor(df[df.columns[:-1]])

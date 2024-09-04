@@ -2,7 +2,7 @@ import streamlit as st
 
 import utils
 
-df, df_team, current_frame, df_conf = utils.read_origin_score()
+df, df_team, current_frame, df_conf, now = utils.read_origin_score()
 
 st.title("事務局用")
 data_staff = st.secrets["staff"]

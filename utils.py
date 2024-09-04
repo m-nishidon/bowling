@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import gspread
 import pandas as pd
 import plotly.express as px
@@ -67,6 +69,7 @@ def get_one_game_info(pins):
 # スプレッドシートのデータを読み込み
 @st.cache_data
 def read_origin_score():
+    now = datetime.now()
     client = connect_spread_sheet()
     # スプレッドシートを開く
     try:
@@ -111,7 +114,7 @@ def read_origin_score():
     df_team = make_rank(df_team)
     df = make_rank(df)
 
-    return df, df_team, current_frame, df_conf
+    return df, df_team, current_frame, df_conf, now
 
 
 @st.cache_data

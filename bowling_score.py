@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
@@ -11,63 +13,122 @@ colors = (
     + px.colors.qualitative.Dark24
 )
 
-df, df_team, current_frame, df_conf = utils.read_origin_score()
-
-# if "width_tmp" in st.session_state and st.sidebar.button(
-#     "保存(フィルター等の設定を保存)"
-# ):
-#     st.session_state["width"] = st.session_state["width_tmp"]
+df, df_team, current_frame, df_conf, now = utils.read_origin_score()
 
 
-# if "width" in st.session_state and st.sidebar.button("読込(フィルター等の設定を読込)"):
-#     width = st.session_state["width"]
-# else:
-#     width = 600
+# 拠点に関するフィルター
+# session_stateの問題で拠点、チーム、名前は関数化せずそれぞれ処理
+def update_area_r():
+    st.session_state["area_r"] = st.session_state["new_area_r"]
 
 
-def sidebar_select(df, df_team, colname, multi):
-    selected_elements = "ALL"
-    st.sidebar.title(f"{colname}選択")
-    if colname != "名前":
-        labels = ["ALL"] + sorted(df_team[colname].unique())
-    else:
-        labels = ["ALL"] + sorted(df[colname].unique())
-
-    if not multi:
-        selected_elements = set()
-        selected_elements.add(
-            st.sidebar.selectbox(f"{colname}を選択してください", labels)
-        )
-    else:
-        selected_elements = set(
-            st.sidebar.multiselect(f"{colname}を選択してください", labels, labels[0])
-        )
-
-    if "ALL" not in selected_elements:
-        df = df[df[colname].isin(selected_elements)]
-        if colname != "名前":
-            df_team = df_team[df_team[colname].isin(selected_elements)]
-    return df, df_team, selected_elements
+st.sidebar.title("拠点選択")
+labels = ["ALL"] + sorted(df_team["拠点"].unique())
+idx = labels.index(st.session_state["area_r"]) if "area_r" in st.session_state else 0
+selected_area_r = st.sidebar.selectbox(
+    "拠点を選択してください",
+    labels,
+    idx,
+    key="new_area_r",
+    on_change=update_area_r,
+)
+if selected_area_r != "ALL":
+    df = df[df["拠点"] == selected_area_r]
+    df_team = df_team[df_team["拠点"] == selected_area_r]
 
 
-df, df_team, _ = sidebar_select(df, df_team, "拠点", False)
-df, df_team, _ = sidebar_select(df, df_team, "チーム", True)
-df, df_team, selected_elements = sidebar_select(df, df_team, "名前", True)
+# チームに関するフィルター
+def update_team_r():
+    selected_team_r = st.session_state["new_team_r"]
+    if "ALL" in selected_team_r and len(selected_team_r) >= 2:
+        if selected_team_r[-1] == "ALL":
+            selected_team_r = set({"ALL"})
+        else:
+            selected_team_r = set(selected_team_r)
+            selected_team_r.discard("ALL")
+    st.session_state["team_r"] = selected_team_r
 
+
+st.sidebar.title("チーム選択")
+labels = ["ALL"] + sorted(df_team["チーム"].unique())
+
+selected_team = set(
+    st.sidebar.multiselect(
+        "チームを選択してください",
+        labels,
+        st.session_state["team_r"] if "team_r" in st.session_state else labels[0],
+        key="new_team_r",
+        on_change=update_team_r,
+    )
+)
+
+if "ALL" not in selected_team:
+    df = df[df["チーム"].isin(selected_team)]
+    df_team = df_team[df_team["チーム"].isin(selected_team)]
+
+
+# 名前に関するフィルター
+def update_name_r():
+    selected_name_r = st.session_state["new_name_r"]
+    if "ALL" in selected_name_r and len(selected_name_r) >= 2:
+        if selected_name_r[-1] == "ALL":
+            selected_name_r = set({"ALL"})
+        else:
+            selected_name_r = set(selected_name_r)
+            selected_name_r.discard("ALL")
+    st.session_state["name_r"] = selected_name_r
+
+
+st.sidebar.title("名前選択")
+labels = ["ALL"] + sorted(df["名前"].unique())
+
+selected_name = set(
+    st.sidebar.multiselect(
+        "名前を選択してください",
+        labels,
+        st.session_state["name_r"] if "name_r" in st.session_state else labels[0],
+        key="new_name_r",
+        on_change=update_name_r,
+    )
+)
+
+if "ALL" not in selected_name:
+    df = df[df["名前"].isin(selected_name)]
+
+# 表示するフレームは進行状況に応じて自動変更
+# session_stateは使用しない
 current_frame = st.sidebar.slider(
     label="フレームを選択してください", min_value=1, max_value=20, value=current_frame
 )
 
-# width = st.sidebar.slider("グラフの幅を選択", 300, 700, step=100, value=width)
+
+# グラフの幅の設定
+def update_width():
+    st.session_state["width"] = st.session_state["new_width"]
+
+
+width = st.sidebar.slider(
+    "グラフの幅を選択",
+    300,
+    700,
+    step=100,
+    key="new_width",
+    value=st.session_state["width"] if "width" in st.session_state else 400,
+    on_change=update_width,
+)
 
 
 # データを表示
 if st.button("順位更新"):
-    # 再読み込み
-    utils.read_origin_score.clear()
-    df, df_team, current_frame, df_conf = utils.read_origin_score()
+    if (datetime.now() - now).seconds <= 30:
+        st.warning("時間を空けて再度順位更新ボタンを押してください")
+    else:
+        # 再読み込み
+        utils.read_origin_score.clear()
+        df, df_team, current_frame, df_conf, now = utils.read_origin_score()
+st.write(f'{now.strftime("%Y/%m/%d %H:%M:%S")}時点')
 
-if "ALL" in selected_elements:
+if selected_name == {"ALL"}:
     st.title("チーム順位表")
 
     st.dataframe(
@@ -109,7 +170,7 @@ if "ALL" in selected_elements:
             yanchor="bottom",
         ),
         dragmode="pan",
-        # width=width,
+        width=width,
     )
 
     st.plotly_chart(fig_team)
@@ -156,7 +217,7 @@ fig.update_layout(
         yanchor="bottom",
     ),
     dragmode="pan",
-    # width=width,
+    width=width,
 )
 
 st.plotly_chart(fig)
