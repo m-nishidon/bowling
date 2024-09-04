@@ -107,11 +107,11 @@ def update_width():
 
 width = st.sidebar.slider(
     "グラフの幅を選択",
-    300,
+    100,
     700,
-    step=100,
+    step=50,
     key="new_width",
-    value=st.session_state["width"] if "width" in st.session_state else 400,
+    value=st.session_state["width"] if "width" in st.session_state else 300,
     on_change=update_width,
 )
 
