@@ -129,7 +129,7 @@ idx_min, idx_ma = df["index"].min(), df["index"].max()
 df = df.set_index("名前")
 
 st.write("以下の表を直接更新してください")
-edited_df = st.data_editor(df[df.columns[:-1]])
+edited_df = st.data_editor(df)  # [df.columns[:-1]])
 
 if st.button("確認"):
     st.dataframe(edited_df.style.apply(utils.style_diff, target=df, axis=0))
@@ -137,8 +137,7 @@ if st.button("確認"):
     st.write(
         "(ダメな場合はページ切り替えればとりあえずはOKです。おかしな数字（足して10超えるとか）の確認は未了です。)。チームと拠点は色がついていても更新されません。"
     )
-else:
-    exit()
+
 
 if st.button("更新"):
     client = utils.connect_spread_sheet()
@@ -157,18 +156,24 @@ if st.button("更新"):
     for idx, row_before, row_after in zip(
         df["index"], df.itertuples(), edited_df.itertuples()
     ):
-        idx %= len(df)
+        idx %= idx_min
         for idx2, (v_before, v_after) in enumerate(
             zip(row_before[3:-1], row_after[3:-1])
         ):
             if v_before == v_after:
                 continue
             else:
-                cell = cells[idx * 21 + idx2]
+                cell = cells[idx * 21 + (start - 1) * 2 + idx2]
                 cell.value = v_after
                 cells_update.append(cell)
-    ws.update_cells(cells_update)
-else:
-    pass
-    # st.success("更新しました")
-    # st.write(cells)
+    if not cells_update:
+        st.warning("更新対象データがありませんでした")
+    else:
+        ws.update_cells(cells_update)
+        st.success("更新しました")
+        utils.balloons_or_snows()
+        # 再読み込み
+        utils.read_origin_score.clear()
+        df, df_team, current_frame, df_conf, now, open_result, stop_update = (
+            utils.read_origin_score()
+        )
