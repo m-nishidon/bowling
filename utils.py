@@ -1,4 +1,5 @@
 import datetime
+import random
 
 import gspread
 import pandas as pd
@@ -89,7 +90,11 @@ def read_origin_score():
 
     df = pd.DataFrame(sheet_data)
 
-    df, df_conf = df[df.columns[:-3]].copy(), df[df.columns[-3:]][:2].copy()
+    df, df_conf = df[df.columns[:-3]].copy(), df[df.columns[-3:]][:3].copy()
+    open_result, stop_update, contest_mode = df_conf["値"]
+    df = (
+        df[: df.shape[0] // 2].copy() if contest_mode else df[df.shape[0] // 2 :].copy()
+    )
     for col in df.columns[:2:-1]:
         if df[col].sum() > 0:
             break
@@ -120,7 +125,7 @@ def read_origin_score():
     df_team = make_rank(df_team)
     df = make_rank(df)
 
-    return df, df_team, current_frame, df_conf, now
+    return df, df_team, current_frame, df_conf, now, open_result, stop_update
 
 
 @st.cache_data
@@ -168,3 +173,37 @@ def send_message(message, token):
     }
 
     requests.post("https://notify-api.line.me/api/notify", headers=headers, files=files)
+
+
+def update_table(
+    requests,
+):
+    client = connect_spread_sheet()
+    # スプレッドシートを開く
+    try:
+        spreadsheet = client.open("スコア表")
+    except AttributeError:
+        connect_spread_sheet.clear()
+        client = connect_spread_sheet()
+        spreadsheet = client.open("スコア表").worksheet("data")
+    spreadsheet.batch_update(
+        {"value_input_option": "RAW", "data": requests}  # 数値をそのまま書き込む
+    )
+
+    st.success("データを送信しました")
+    balloons_or_snows()
+
+
+def balloons_or_snows():
+    if random.randint(0, 1):
+        st.balloons()
+    else:
+        st.snow()
+
+
+def style_diff(col, target):
+    t = target[col.name]
+    return [
+        "background-color: lightcoral;" if t[idx] != val else ""
+        for idx, val in col.items()
+    ]

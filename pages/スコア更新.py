@@ -5,7 +5,14 @@ import utils
 st.title("スコア更新用")
 
 
-df, df_team, current_frame, df_conf, now = utils.read_origin_score()
+df, df_team, current_frame, df_conf, now, open_result, stop_update = (
+    utils.read_origin_score()
+)
+
+if stop_update:
+    st.info("事務局確認中のため更新できません。結果発表をお待ちください。")
+    utils.datetimeballoons_or_snows()
+    exit()
 
 df = df[df.columns[:-21]]
 
@@ -116,7 +123,52 @@ else:
     ]
 
 # インデックスを名前列にする
-# 元のインデックスも保存しておく
+df = df.sort_index()
 df["index"] = df.index
+idx_min, idx_ma = df["index"].min(), df["index"].max()
 df = df.set_index("名前")
+
+st.write("以下の表を直接更新してください")
 edited_df = st.data_editor(df[df.columns[:-1]])
+
+if st.button("確認"):
+    st.dataframe(edited_df.style.apply(utils.style_diff, target=df, axis=0))
+    st.write("赤色部分のデータを更新します。よろしいですか？")
+    st.write(
+        "(ダメな場合はページ切り替えればとりあえずはOKです。おかしな数字（足して10超えるとか）の確認は未了です。)。チームと拠点は色がついていても更新されません。"
+    )
+else:
+    exit()
+
+if st.button("更新"):
+    client = utils.connect_spread_sheet()
+    # スプレッドシートを開く
+    try:
+        ws = client.open("スコア表").worksheet("data")
+    except AttributeError:
+        utils.connect_spread_sheet.clear()
+        client = utils.connect_spread_sheet()
+        ws = client.open("スコア表").worksheet("data")
+    if selected_game == 1:
+        cells = ws.range(f"D{idx_min+2}:X{idx_ma+2}")
+    else:
+        cells = ws.range(f"Y{idx_min+2}:AS{idx_ma+2}")
+    cells_update = []
+    for idx, row_before, row_after in zip(
+        df["index"], df.itertuples(), edited_df.itertuples()
+    ):
+        idx %= len(df)
+        for idx2, (v_before, v_after) in enumerate(
+            zip(row_before[3:-1], row_after[3:-1])
+        ):
+            if v_before == v_after:
+                continue
+            else:
+                cell = cells[idx * 21 + idx2]
+                cell.value = v_after
+                cells_update.append(cell)
+    ws.update_cells(cells_update)
+else:
+    pass
+    # st.success("更新しました")
+    # st.write(cells)

@@ -11,7 +11,18 @@ colors = (
     + px.colors.qualitative.Dark24
 )
 
-df, df_team, current_frame, df_conf, now = utils.read_origin_score()
+df, df_team, current_frame, df_conf, now, open_result, stop_update = (
+    utils.read_origin_score()
+)
+
+
+# 結果発表前は19フレーム目までしか順位表に表現しない
+if not open_result:
+    if current_frame == 20:
+        st.info("最終フレームの結果は反映していません。結果発表をお待ちください！")
+        current_frame = 19
+else:
+    utils.balloons_or_snows()
 
 
 # 拠点に関するフィルター
@@ -123,7 +134,9 @@ if st.button("順位更新"):
     else:
         # 再読み込み
         utils.read_origin_score.clear()
-        df, df_team, current_frame, df_conf, now = utils.read_origin_score()
+        df, df_team, current_frame, df_conf, now, open_result, stop_update = (
+            utils.read_origin_score()
+        )
 st.write(f'{now.strftime("%Y/%m/%d %H:%M:%S")}時点')
 
 if selected_name == {"ALL"}:
