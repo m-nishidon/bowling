@@ -207,3 +207,9 @@ def style_diff(col, target):
         "background-color: lightcoral;" if t[idx] != val else ""
         for idx, val in col.items()
     ]
+
+
+def highlight_specific_cell(x, row, col):
+    df_styler = pd.DataFrame("", index=x.index, columns=x.columns)
+    df_styler.iat[row, col] = "background-color: yellow"
+    return df_styler

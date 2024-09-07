@@ -130,9 +130,40 @@ df = df.sort_index()
 df["index"] = df.index
 idx_min, idx_ma = df["index"].min(), df["index"].max()
 df = df.set_index("名前")
+df = df[df.columns[2:]]
 
-st.write("以下の表を直接更新してください")
-edited_df = st.data_editor(df)  # [df.columns[:-1]])
+edited_df = df.copy()
+if "rc" not in st.session_state:
+    row, col = 0, 0
+else:
+    row, col = st.session_state["rc"]
+    if row >= df.shape[0] or col >= df.shape[1]:
+        st.write(df.shape[0], df.shape[1])
+        row, col = 0, 0
+col1, col2 = st.columns([1, 9])
+with col1:
+    if st.button(":arrow_double_up:"):
+        row = max(0, row - 1)
+    if st.button(":arrow_double_down:"):
+        row = min(df.shape[0], row + 1)
+    if st.button(":rewind:"):
+        col = max(0, col - 1)
+    if st.button(":fast_forward:"):
+        col = min(df.shape[1], col + 1)
+    st.write(row, col)
+    st.session_state["rc"] = (row, col)
+    st.write(row, col)
+
+with col2:
+    st.write("以下の表を直接更新してください")
+    st.dataframe(
+        edited_df.style.apply(
+            utils.highlight_specific_cell, axis=None, row=row, col=col
+        )
+    )  # [df.columns[:-1]])
+
+
+# edited_df.style.apply(utils.highlight_specific_cell, axis=None, row=row, col=col)
 
 # なぜかstreamlitクラウド上では並ばない
 #
@@ -214,13 +245,16 @@ for i, tab in enumerate(
             " X",
             " /",
             " G",
-            " -",
+            " ‐",
         )
     )
 ):
     with tab:
         if i:
             st.write([-1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, "X", "/", "G", "-"][i])
+
+
+st.write(edited_df.iat[0, 2])
 
 
 # img = image_select(
@@ -258,7 +292,7 @@ if st.button("更新"):
     ):
         idx %= idx_min
         for idx2, (v_before, v_after) in enumerate(
-            zip(row_before[3:-1], row_after[3:-1])
+            zip(row_before[1:-1], row_after[1:-1])
         ):
             if v_before == v_after:
                 continue
