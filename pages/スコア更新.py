@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import streamlit as st
+from PIL import Image
 from streamlit_image_select import image_select
 
 import utils
@@ -134,15 +135,46 @@ st.write("以下の表を直接更新してください")
 edited_df = st.data_editor(df)  # [df.columns[:-1]])
 
 # なぜかstreamlitクラウド上では並ばない
-images = sorted(list(Path(IMG_FOLDER, "score").glob("*png")))
-img = image_select(
-    label="",
-    images=images,
-    index=-1,
-    use_container_width=True,
-    return_value="index",
-)
-st.write(img)
+#
+r = False
+for col, c in zip(st.columns(5), list(map(str, range(5)))):
+    with col:
+        res = st.button(c)
+        if res:
+            r = c
+for col, c in zip(st.columns(5), list(map(str, range(5, 10)))):
+    with col:
+        res = st.button(c)
+        if res:
+            r = c
+for col, c in zip(st.columns(5), list(map(str, range(10, 11))) + ["X", "/", "G", "‐"]):
+    with col:
+        res = st.button(c)
+        if res:
+            r = c
+st.write(r)
+
+# col1, col2, col3, col4, col5 = st.columns(14)
+# with col1:
+#     st.button("6")
+# with col2:
+#     st.button("7")
+# with col3:
+#     st.button("8")
+# with col4:
+#     st.button("9")
+# with col5:
+#     st.button("10")
+
+
+# img = image_select(
+#     label="",
+#     images=[Image.open(image).convert("RGB").resize((5, 5)) for image in images],
+#     index=-1,
+#     use_container_width=False,
+#     return_value="index",
+# )
+# st.write(img)
 if st.button("確認"):
     st.dataframe(edited_df.style.apply(utils.style_diff, target=df, axis=0))
     st.write("赤色部分のデータを更新します。よろしいですか？")
