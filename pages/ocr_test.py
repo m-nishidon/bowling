@@ -5,6 +5,8 @@ from PIL import Image
 
 import utils
 
+utils.clear_ss_score_update()
+
 st.title("画像認識とかのテスト")
 
 

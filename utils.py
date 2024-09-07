@@ -213,3 +213,12 @@ def highlight_specific_cell(x, row, col):
     df_styler = pd.DataFrame("", index=x.index, columns=x.columns)
     df_styler.iat[row, col] = "background-color: yellow"
     return df_styler
+
+
+def clear_ss_score_update():
+    import inspect
+
+    print(inspect.stack())
+    for key in ["rc", "df"]:
+        if key in st.session_state:
+            del st.session_state[key]

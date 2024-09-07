@@ -4,6 +4,8 @@ import streamlit as st
 
 import utils
 
+utils.clear_ss_score_update()
+
 # カラースケールを拡張
 colors = (
     px.colors.qualitative.Light24

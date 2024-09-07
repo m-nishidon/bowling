@@ -24,6 +24,7 @@ df = df[df.columns[:-21]]
 # session_stateの問題で拠点、チーム、名前は関数化せずそれぞれ処理
 def update_area():
     st.session_state["area"] = st.session_state["new_area"]
+    utils.clear_ss_score_update()
 
 
 st.subheader("拠点選択")
@@ -50,6 +51,7 @@ def update_team():
             selected_team = set(selected_team)
             selected_team.discard("ALL")
     st.session_state["team"] = selected_team
+    utils.clear_ss_score_update()
 
 
 st.subheader("チーム選択")
@@ -77,6 +79,7 @@ def update_name():
             selected_name = set(selected_name)
             selected_name.discard("ALL")
     st.session_state["name"] = selected_name
+    utils.clear_ss_score_update()
 
 
 st.subheader("名前選択")
@@ -93,10 +96,17 @@ selected_name = set(
 if selected_name != {"ALL"}:
     df = df[df["名前"].isin(selected_name)]
 
+
 # 1ゲーム目2ゲーム目の選択
+
 st.subheader("ゲーム選択")
 idx = st.session_state["game"] if "game" in st.session_state else 0
-selected_game = st.selectbox("何ゲーム目かを選択してください", (1, 2), idx)
+selected_game = st.selectbox(
+    "何ゲーム目かを選択してください",
+    (1, 2),
+    idx,
+    on_change=utils.clear_ss_score_update,
+)
 st.session_state["game"] = selected_game - 1
 if selected_game == 1:
     df = df[df.columns[:-21]]
@@ -107,6 +117,7 @@ else:
 # フレームの選択
 def update_frame():
     st.session_state["frame"] = st.session_state["new_frame"]
+    utils.clear_ss_score_update()
 
 
 start, end = st.slider(
@@ -132,7 +143,10 @@ idx_min, idx_ma = df["index"].min(), df["index"].max()
 df = df.set_index("名前")
 df = df[df.columns[2:]]
 
-edited_df = df.copy()
+if "df" in st.session_state:
+    edited_df = st.session_state["df"]
+else:
+    edited_df = df.copy()
 if "rc" not in st.session_state:
     row, col = 0, 0
 else:
@@ -201,7 +215,7 @@ st.dataframe(
         utils.highlight_specific_cell, axis=None, row=row, col=col
     )
 )  # [df.columns[:-1]])
-
+st.session_state["df"] = edited_df
 
 # img = image_select(
 #     label="",
