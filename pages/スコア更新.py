@@ -136,7 +136,7 @@ edited_df = st.data_editor(df)  # [df.columns[:-1]])
 
 # なぜかstreamlitクラウド上では並ばない
 #
-r = False
+
 # for col, c in zip(st.columns(3), list(map(str, range(3)))):
 #     with col:
 #         res = st.button(c)
@@ -163,25 +163,64 @@ r = False
 #         if res:
 #             r = c
 
-tab1, tab2, tab3 = st.tabs(["1-5", "6-10", "その他"])
+# tab1, tab2, tab3 = st.tabs(["1-5", "6-10", "その他"])
+# r = False
+# with tab1:
+#     for c in list(map(str, range(6))):
+#         res = st.button(c)
+#         if res:
+#             r = c
+# with tab2:
+#     for c in list(map(str, range(6, 11))):
+#         res = st.button(c)
+#         if res:
+#             r = c
+# with tab3:
+#     for c in ["X", "/", "G", "‐"]:
+#         res = st.button(c)
+#         if res:
+#             r = c
 
-with tab1:
-    for c in list(map(str, range(6))):
-        res = st.button(c)
-        if res:
-            r = c
-with tab2:
-    for c in list(map(str, range(6, 11))):
-        res = st.button(c)
-        if res:
-            r = c
-with tab3:
-    for c in ["X", "/", "G", "‐"]:
-        res = st.button(c)
-        if res:
-            r = c
+# st.write(r)
 
-st.write(r)
+r = False
+# for i, tab in enumerate(st.tabs(("  ", " 0", " 1", " 2", " 3", " 4"))):
+#     with tab:
+#         if i:
+#             st.write([-1, 0, 1, 2, 3, 4][i])
+# for i, tab in enumerate(st.tabs(("  ", " 5", " 6", " 7", " 8", " 9"))):
+#     with tab:
+#         if i:
+#             st.write([-1, 5, 6, 7, 8, 9][i])
+# for i, tab in enumerate(st.tabs(("  ", "10", " X", " /", " G", " -"))):
+#     with tab:
+#         if i:
+#             st.write([-1, 10, "X", "/", "G", "-"][i])
+for i, tab in enumerate(
+    st.tabs(
+        (
+            "  ",
+            " 0",
+            " 1",
+            " 2",
+            " 3",
+            " 4",
+            " 5",
+            " 6",
+            " 7",
+            " 8",
+            " 9",
+            "10",
+            " X",
+            " /",
+            " G",
+            " -",
+        )
+    )
+):
+    with tab:
+        if i:
+            st.write([-1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, "X", "/", "G", "-"][i])
 
 
 # img = image_select(
