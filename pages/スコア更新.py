@@ -137,46 +137,51 @@ edited_df = st.data_editor(df)  # [df.columns[:-1]])
 # なぜかstreamlitクラウド上では並ばない
 #
 r = False
-for col, c in zip(st.columns(3), list(map(str, range(3)))):
-    with col:
-        res = st.button(c)
-        if res:
-            r = c
-for col, c in zip(st.columns(3), list(map(str, range(3, 6)))):
-    with col:
-        res = st.button(c)
-        if res:
-            r = c
-for col, c in zip(st.columns(3), list(map(str, range(6, 9)))):
-    with col:
-        res = st.button(c)
-        if res:
-            r = c
-for col, c in zip(st.columns(3), list(map(str, range(9, 11))) + ["X"]):
-    with col:
-        res = st.button(c)
-        if res:
-            r = c
-for col, c in zip(st.columns(3), ["/", "G", "‐"]):
-    with col:
-        res = st.button(c)
-        if res:
-            r = c
+# for col, c in zip(st.columns(3), list(map(str, range(3)))):
+#     with col:
+#         res = st.button(c)
+#         if res:
+#             r = c
+# for col, c in zip(st.columns(3), list(map(str, range(3, 6)))):
+#     with col:
+#         res = st.button(c)
+#         if res:
+#             r = c
+# for col, c in zip(st.columns(3), list(map(str, range(6, 9)))):
+#     with col:
+#         res = st.button(c)
+#         if res:
+#             r = c
+# for col, c in zip(st.columns(3), list(map(str, range(9, 11))) + ["X"]):
+#     with col:
+#         res = st.button(c)
+#         if res:
+#             r = c
+# for col, c in zip(st.columns(3), ["/", "G", "‐"]):
+#     with col:
+#         res = st.button(c)
+#         if res:
+#             r = c
 
+tab1, tab2, tab3 = st.tabs(["1-5", "6-10", "その他"])
+
+with tab1:
+    for c in list(map(str, range(6))):
+        res = st.button(c)
+        if res:
+            r = c
+with tab2:
+    for c in list(map(str, range(6, 11))):
+        res = st.button(c)
+        if res:
+            r = c
+with tab3:
+    for c in ["X", "/", "G", "‐"]:
+        res = st.button(c)
+        if res:
+            r = c
 
 st.write(r)
-
-# col1, col2, col3, col4, col5 = st.columns(14)
-# with col1:
-#     st.button("6")
-# with col2:
-#     st.button("7")
-# with col3:
-#     st.button("8")
-# with col4:
-#     st.button("9")
-# with col5:
-#     st.button("10")
 
 
 # img = image_select(
