@@ -133,12 +133,13 @@ df = df.set_index("名前")
 st.write("以下の表を直接更新してください")
 edited_df = st.data_editor(df)  # [df.columns[:-1]])
 
-images = list(Path(IMG_FOLDER, "score").glob("*png"))
+# なぜかstreamlitクラウド上では並ばない
+images = sorted(list(Path(IMG_FOLDER, "score").glob("*png")))
 img = image_select(
     label="",
     images=images,
     index=-1,
-    use_container_width=False,
+    use_container_width=True,
     return_value="index",
 )
 st.write(img)
