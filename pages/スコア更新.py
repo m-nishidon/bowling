@@ -137,21 +137,33 @@ edited_df = st.data_editor(df)  # [df.columns[:-1]])
 # なぜかstreamlitクラウド上では並ばない
 #
 r = False
-for col, c in zip(st.columns(5), list(map(str, range(5)))):
+for col, c in zip(st.columns(3), list(map(str, range(3)))):
     with col:
         res = st.button(c)
         if res:
             r = c
-for col, c in zip(st.columns(5), list(map(str, range(5, 10)))):
+for col, c in zip(st.columns(3), list(map(str, range(3, 6)))):
     with col:
         res = st.button(c)
         if res:
             r = c
-for col, c in zip(st.columns(5), list(map(str, range(10, 11))) + ["X", "/", "G", "‐"]):
+for col, c in zip(st.columns(3), list(map(str, range(6, 9)))):
     with col:
         res = st.button(c)
         if res:
             r = c
+for col, c in zip(st.columns(3), list(map(str, range(9, 11))) + ["X"]):
+    with col:
+        res = st.button(c)
+        if res:
+            r = c
+for col, c in zip(st.columns(3), ["/", "G", "‐"]):
+    with col:
+        res = st.button(c)
+        if res:
+            r = c
+
+
 st.write(r)
 
 # col1, col2, col3, col4, col5 = st.columns(14)
