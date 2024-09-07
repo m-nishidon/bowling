@@ -146,6 +146,7 @@ if selected_name == {"ALL"}:
         df_team[["順位", str(current_frame), "メンバー", "拠点"]].rename(
             columns={str(current_frame): "得点"}
         ),
+        use_container_width=True,
         hide_index=True,
     )
     st.write("※人数の少ないチームの得点は、多いチームと合うように補正しています。")
@@ -184,7 +185,8 @@ if selected_name == {"ALL"}:
         width=width,
     )
 
-    st.plotly_chart(fig_team)
+    st.subheader("")
+    st.plotly_chart(fig_team, use_container_width=True)
 
 
 else:
@@ -196,6 +198,7 @@ st.dataframe(
     df[["順位", str(current_frame), "名前", "拠点", "チーム"]].rename(
         columns={str(current_frame): "得点"}
     ),
+    use_container_width=True,
     hide_index=True,
 )
 
@@ -230,8 +233,8 @@ fig.update_layout(
     dragmode="pan",
     width=width,
 )
-
-st.plotly_chart(fig)
+st.subheader("")
+st.plotly_chart(fig, use_container_width=True)
 
 
 # st.session_state["width_tmp"] = width

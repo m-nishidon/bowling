@@ -1,9 +1,12 @@
+from pathlib import Path
+
 import streamlit as st
+from streamlit_image_select import image_select
 
 import utils
 
+IMG_FOLDER = "_images"
 st.title("スコア更新用")
-
 
 df, df_team, current_frame, df_conf, now, open_result, stop_update = (
     utils.read_origin_score()
@@ -11,7 +14,6 @@ df, df_team, current_frame, df_conf, now, open_result, stop_update = (
 
 if stop_update:
     st.info("事務局確認中のため更新できません。結果発表をお待ちください。")
-    utils.datetimeballoons_or_snows()
     exit()
 
 df = df[df.columns[:-21]]
@@ -131,6 +133,15 @@ df = df.set_index("名前")
 st.write("以下の表を直接更新してください")
 edited_df = st.data_editor(df)  # [df.columns[:-1]])
 
+images = list(Path(IMG_FOLDER, "score").glob("*png"))
+img = image_select(
+    label="",
+    images=images,
+    index=-1,
+    use_container_width=False,
+    return_value="index",
+)
+st.write(img)
 if st.button("確認"):
     st.dataframe(edited_df.style.apply(utils.style_diff, target=df, axis=0))
     st.write("赤色部分のデータを更新します。よろしいですか？")
