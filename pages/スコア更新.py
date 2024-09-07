@@ -138,95 +138,19 @@ if "rc" not in st.session_state:
 else:
     row, col = st.session_state["rc"]
     if row >= df.shape[0] or col >= df.shape[1]:
-        st.write(df.shape[0], df.shape[1])
         row, col = 0, 0
-col1, col2 = st.columns([1, 9])
-with col1:
-    if st.button(":arrow_double_up:"):
-        row = max(0, row - 1)
-    if st.button(":arrow_double_down:"):
-        row = min(df.shape[0], row + 1)
-    if st.button(":rewind:"):
-        col = max(0, col - 1)
-    if st.button(":fast_forward:"):
-        col = min(df.shape[1], col + 1)
-    st.write(row, col)
-    st.session_state["rc"] = (row, col)
-    st.write(row, col)
-
-with col2:
-    st.write("以下の表を直接更新してください")
-    st.dataframe(
-        edited_df.style.apply(
-            utils.highlight_specific_cell, axis=None, row=row, col=col
-        )
-    )  # [df.columns[:-1]])
 
 
-# edited_df.style.apply(utils.highlight_specific_cell, axis=None, row=row, col=col)
+if st.button(":arrow_double_up:"):
+    row = max(0, row - 1)
+if st.button(":arrow_double_down:"):
+    row = min(df.shape[0] - 1, row + 1)
+if st.button(":rewind:"):
+    col = max(0, col - 1)
+if st.button(":fast_forward:"):
+    col = min(df.shape[1] - 1, col + 1)
+st.session_state["rc"] = (row, col)
 
-# なぜかstreamlitクラウド上では並ばない
-#
-
-# for col, c in zip(st.columns(3), list(map(str, range(3)))):
-#     with col:
-#         res = st.button(c)
-#         if res:
-#             r = c
-# for col, c in zip(st.columns(3), list(map(str, range(3, 6)))):
-#     with col:
-#         res = st.button(c)
-#         if res:
-#             r = c
-# for col, c in zip(st.columns(3), list(map(str, range(6, 9)))):
-#     with col:
-#         res = st.button(c)
-#         if res:
-#             r = c
-# for col, c in zip(st.columns(3), list(map(str, range(9, 11))) + ["X"]):
-#     with col:
-#         res = st.button(c)
-#         if res:
-#             r = c
-# for col, c in zip(st.columns(3), ["/", "G", "‐"]):
-#     with col:
-#         res = st.button(c)
-#         if res:
-#             r = c
-
-# tab1, tab2, tab3 = st.tabs(["1-5", "6-10", "その他"])
-# r = False
-# with tab1:
-#     for c in list(map(str, range(6))):
-#         res = st.button(c)
-#         if res:
-#             r = c
-# with tab2:
-#     for c in list(map(str, range(6, 11))):
-#         res = st.button(c)
-#         if res:
-#             r = c
-# with tab3:
-#     for c in ["X", "/", "G", "‐"]:
-#         res = st.button(c)
-#         if res:
-#             r = c
-
-# st.write(r)
-
-r = False
-# for i, tab in enumerate(st.tabs(("  ", " 0", " 1", " 2", " 3", " 4"))):
-#     with tab:
-#         if i:
-#             st.write([-1, 0, 1, 2, 3, 4][i])
-# for i, tab in enumerate(st.tabs(("  ", " 5", " 6", " 7", " 8", " 9"))):
-#     with tab:
-#         if i:
-#             st.write([-1, 5, 6, 7, 8, 9][i])
-# for i, tab in enumerate(st.tabs(("  ", "10", " X", " /", " G", " -"))):
-#     with tab:
-#         if i:
-#             st.write([-1, 10, "X", "/", "G", "-"][i])
 for i, tab in enumerate(
     st.tabs(
         (
@@ -251,10 +175,32 @@ for i, tab in enumerate(
 ):
     with tab:
         if i:
-            st.write([-1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, "X", "/", "G", "-"][i])
+            n = [
+                -1,
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                "X",
+                "/",
+                "G",
+                "-",
+            ][i]
+        if st.button(":white_check_mark:", key=i):
+            edited_df.iat[row, col] = n
 
-
-st.write(edited_df.iat[0, 2])
+st.dataframe(
+    edited_df[edited_df.columns[:-1]].style.apply(
+        utils.highlight_specific_cell, axis=None, row=row, col=col
+    )
+)  # [df.columns[:-1]])
 
 
 # img = image_select(
