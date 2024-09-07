@@ -165,6 +165,22 @@ if st.button(":fast_forward:"):
     col = min(df.shape[1] - 1, col + 1)
 st.session_state["rc"] = (row, col)
 
+with st.expander("データ更新説明", expanded=False):
+    st.markdown(
+        """
+    - エラーが起きても落ち着いてページを切り替えたら戻ります
+    - 上にある矢印4つは基本的には使わない（詳細は後述）
+    - 黄色の箇所に数字が入力される（タップした赤い箇所ではない点注意）
+    - 数字は横一列に並んだ0~-を選択した状態でチェックボックスをタップで黄色の箇所に入力される
+    - 黄色の箇所は右が下に動くため、また数字を選択してチェックボックスをタップ
+    - 2投分(10フレーム目は3投分)入力してから次の人を入力することを想定しているため黄色はZ字状に動く
+    - それ以外の箇所に入力したい場合は上部の矢印4つをクリックして動かす（スマホだと横に並べるのがしんどい…）
+        - ただページ切り替えでリセットした方が早い場合が多い
+    - 確認→更新ボタンでデータ反映
+        - 間違えても上書きすればいいので何度でもOK
+    """
+    )
+
 for i, tab in enumerate(
     st.tabs(
         (
@@ -253,14 +269,19 @@ for i, tab in enumerate(
                     continue
             edited_df.iat[row, col] = n
             if col % 2:
-                if row == edited_df.shape[0] - 1:
+                if frame == 10:
+                    col += 1
+                elif row == edited_df.shape[0] - 1:
                     col = min(col + 1, edited_df.shape[1] - 2)
                     row = 0
                 else:
                     col -= 1
                     row += 1
             else:
-                if col < edited_df.shape[1] - 2:
+                if frame == 10 and col == edited_df.shape[1] - 2:
+                    col -= 2
+                    row = min(row + 1, edited_df.shape[0] - 1)
+                elif col < edited_df.shape[1] - 2:
                     col += 1
                 else:
                     row = min(row + 1, edited_df.shape[0] - 1)
