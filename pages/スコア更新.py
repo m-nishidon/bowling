@@ -208,6 +208,49 @@ for i, tab in enumerate(
                 "-",
             ][i]
         if st.button(":white_check_mark:", key=i):
+            frame = int(edited_df.columns[col].split("_")[0]) % 10
+            if not frame:
+                frame = 10
+            if n == "X":
+                if frame == 10:
+                    if not col % 2:
+                        n = 10
+                    else:
+                        if 1 <= edited_df.iat[row, col - 1] <= 9:
+                            st.error("倒せるピンが10本残っていません。")
+                            continue
+                        else:
+                            n = 10
+                else:
+                    if not col % 2:
+                        n = 10
+                    else:
+                        if 1 <= edited_df.iat[row, col - 1] <= 10:
+                            st.error("倒せるピンが10本残っていません")
+                            continue
+                        else:
+                            n = 10
+            elif n == "/":
+                if not col % 2:
+                    st.error("2投目以外でスペアにはなりません")
+                    continue
+                else:
+                    n = 10 - edited_df.iat[row, col - 1]
+            elif n == "G" or n == "-":
+                n = 0
+
+            elif col % 2:
+                if edited_df.iat[row, col - 1] + n > 10:
+                    if frame < 10 or edited_df.iat[row, col - 1] != 10:
+                        st.error("1投目との合計が10を超えています")
+                        continue
+            if edited_df.columns[col].split("_")[1] == "3":
+                if (
+                    edited_df.iat[row, col - 1] + edited_df.iat[row, col - 2] < 10
+                    and n != 0
+                ):
+                    st.error("3投目はありません")
+                    continue
             edited_df.iat[row, col] = n
             if col % 2:
                 if row == edited_df.shape[0] - 1:
@@ -223,7 +266,6 @@ for i, tab in enumerate(
                     row = min(row + 1, edited_df.shape[0] - 1)
 
             st.session_state["rc"] = (row, col)
-            st.write(row, col)
 
 
 st.dataframe(
