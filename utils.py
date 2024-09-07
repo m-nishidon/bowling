@@ -216,9 +216,9 @@ def highlight_specific_cell(x, row, col):
 
 
 def clear_ss_score_update():
-    import inspect
+    # import inspect
 
-    print(inspect.stack())
+    # print(inspect.stack())
     for key in ["rc", "df"]:
         if key in st.session_state:
             del st.session_state[key]

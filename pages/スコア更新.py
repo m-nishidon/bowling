@@ -143,6 +143,7 @@ idx_min, idx_ma = df["index"].min(), df["index"].max()
 df = df.set_index("名前")
 df = df[df.columns[2:]]
 
+
 if "df" in st.session_state:
     edited_df = st.session_state["df"]
 else:
@@ -153,7 +154,6 @@ else:
     row, col = st.session_state["rc"]
     if row >= df.shape[0] or col >= df.shape[1]:
         row, col = 0, 0
-
 
 if st.button(":arrow_double_up:"):
     row = max(0, row - 1)
@@ -209,11 +209,28 @@ for i, tab in enumerate(
             ][i]
         if st.button(":white_check_mark:", key=i):
             edited_df.iat[row, col] = n
+            if col % 2:
+                if row == edited_df.shape[0] - 1:
+                    col = min(col + 1, edited_df.shape[1] - 2)
+                    row = 0
+                else:
+                    col -= 1
+                    row += 1
+            else:
+                if col < edited_df.shape[1] - 2:
+                    col += 1
+                else:
+                    row = min(row + 1, edited_df.shape[0] - 1)
+
+            st.session_state["rc"] = (row, col)
+            st.write(row, col)
+
 
 st.dataframe(
     edited_df[edited_df.columns[:-1]].style.apply(
         utils.highlight_specific_cell, axis=None, row=row, col=col
-    )
+    ),
+    use_container_width=True,
 )  # [df.columns[:-1]])
 st.session_state["df"] = edited_df
 
@@ -226,7 +243,12 @@ st.session_state["df"] = edited_df
 # )
 # st.write(img)
 if st.button("確認"):
-    st.dataframe(edited_df.style.apply(utils.style_diff, target=df, axis=0))
+    st.dataframe(
+        edited_df[edited_df.columns[:-1]].style.apply(
+            utils.style_diff, target=df, axis=0
+        ),
+        use_container_width=True,
+    )
     st.write("赤色部分のデータを更新します。よろしいですか？")
     st.write(
         "(ダメな場合はページ切り替えればとりあえずはOKです。おかしな数字（足して10超えるとか）の確認は未了です。)。チームと拠点は色がついていても更新されません。"
